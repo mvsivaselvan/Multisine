@@ -12,6 +12,7 @@
 
 #include "fft.h"
 #include <math.h>
+#include <stdlib.h>
 
 #define TWO_PI (6.28318530717959)
 #define ITNO 200
@@ -19,18 +20,24 @@
 /* EPSILON is the distance from 1.0 to the next double precision floating point number.
    See Matlab help for "eps" function for more info. */
 
-#ifdef __LABVIEW
-_declspec(dllexport) long msingen(unsigned long numFFTpoints, unsigned long numFreq, 
+#if defined(_WIN32)
+#define MSIN_EXPORT __declspec(dllexport)
+#else
+#define MSIN_EXPORT
+#endif
+
+#if defined(__LABVIEW) || defined(__PYCLIB)
+MSIN_EXPORT long msingen(unsigned long numFFTpoints, unsigned long numFreq,
 	double multisinex[]);
 #endif
 void vectorCopy(double *vec1, double *vec2, unsigned long n);
 double interpolate_clx(double crx);
-void getTimeFunction(double *cx, unsigned long numFreq, double *multisinex, unsigned long numFFTpoints, 
+void getTimeFunction(double *cx, unsigned long numFreq, double *multisinex, unsigned long numFFTpoints,
 					 double *crx);
 double sign(double x);
 
-#ifdef __LABVIEW
-_declspec(dllexport) long msingen(unsigned long numFFTpoints, unsigned long numFreq, 
+#if defined(__LABVIEW) || defined(__PYCLIB)
+MSIN_EXPORT long msingen(unsigned long numFFTpoints, unsigned long numFreq,
 	double multisinex[])
 #endif
 #ifdef __MATLAB
@@ -79,7 +86,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 #ifdef __LABVIEW
 	ampv = (double *)AZNewPtr(numFreq*sizeof(double));
 #endif
-#ifdef __MATLAB
+#if defined(__MATLAB) || defined(__PYCLIB)
 	ampv = (double *)malloc(numFreq*sizeof(double));
 #endif
 	for (i=0; i<numFreq; i++) ampv[i] = 1.0;
@@ -91,7 +98,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	cx = (double *)AZNewPtr(2*numFreq*sizeof(double));
 	cxopt = (double *)AZNewPtr(2*numFreq*sizeof(double));
 #endif
-#ifdef __MATLAB
+#if defined(__MATLAB) || defined(__PYCLIB)
 	cx = (double *)malloc(2*numFreq*sizeof(double));
 	cxopt = (double *)malloc(2*numFreq*sizeof(double));
 #endif
@@ -100,7 +107,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 #ifdef __LABVIEW        
 		RandomGen(&phase); phase*=TWO_PI;
 #endif
-#ifdef __MATLAB
+#if defined(__MATLAB) || defined(__PYCLIB)
         phase = TWO_PI*(double)rand()/((double)RAND_MAX + 1.0);
 #endif
 		cx[2*i] = ampv[i]*cos(phase);
@@ -223,7 +230,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	AZDisposePtr(cx);
 	AZDisposePtr(cxopt);
 #endif
-#ifdef __MATLAB
+#if defined(__MATLAB) || defined(__PYCLIB)
     free(ampv);
     free(cx);
     free(cxopt);
